@@ -1,7 +1,14 @@
+FROM surnet/alpine-wkhtmltopdf:3.9-0.12.5-full as wkhtmltopdf
+
 FROM php:7.3-fpm-alpine
 
 #old port change new port =>  RUN sed -i 's/9000/9001/' /usr/local/etc/php-fpm.d/zz-docker.conf
 RUN sed -i 's/9000/9000/' /usr/local/etc/php-fpm.d/zz-docker.conf
+
+# apt-get install -y xvfb libfontconfig wkhtmltopdf
+COPY --from=wkhtmltopdf_image /bin/wkhtmltopdf /usr/local/bin/wkhtmltopdf
+COPY --from=wkhtmltopdf_image /bin/wkhtmltoimage /usr/local/bin/wkhtmltoimage
+COPY --from=wkhtmltopdf_image /bin/libwkhtmltox* /usr/local/bin/
 
 # Install dev dependencies
 RUN apk add --no-cache --virtual .build-deps \
