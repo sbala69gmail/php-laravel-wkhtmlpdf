@@ -6,9 +6,36 @@ FROM php:7.3-fpm-alpine
 RUN sed -i 's/9000/9000/' /usr/local/etc/php-fpm.d/zz-docker.conf
 
 # apt-get install -y xvfb libfontconfig wkhtmltopdf
-COPY --from=wkhtmltopdf_image /bin/wkhtmltopdf /usr/local/bin/wkhtmltopdf
-COPY --from=wkhtmltopdf_image /bin/wkhtmltoimage /usr/local/bin/wkhtmltoimage
-COPY --from=wkhtmltopdf_image /bin/libwkhtmltox* /usr/local/bin/
+# Install dependencies for wkhtmltopdf
+RUN apk add --no-cache \
+  libstdc++ \
+  libx11 \
+  libxrender \
+  libxext \
+  libssl1.1 \
+  ca-certificates \
+  fontconfig \
+  freetype \
+  ttf-dejavu \
+  ttf-droid \
+  ttf-freefont \
+  ttf-liberation \
+  ttf-ubuntu-font-family \
+&& apk add --no-cache --virtual .build-deps \
+  msttcorefonts-installer \
+\
+# Install microsoft fonts
+&& update-ms-fonts \
+&& fc-cache -f \
+\
+# Clean up when done
+&& rm -rf /tmp/* \
+&& apk del .build-deps
+
+# Copy wkhtmltopdf files from docker-wkhtmltopdf image
+COPY --from=wkhtmltopdf /bin/wkhtmltopdf /bin/wkhtmltopdf
+COPY --from=wkhtmltopdf /bin/wkhtmltoimage /bin/wkhtmltoimage
+COPY --from=wkhtmltopdf /bin/libwkhtmltox* /bin/
 
 # Install dev dependencies
 RUN apk add --no-cache --virtual .build-deps \
